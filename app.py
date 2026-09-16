@@ -1,51 +1,57 @@
 # ==========================================================
-# FIREGUARD AI
+# FIREGUARD AI v4.0 FINAL (RAILWAY READY)
 # Smart Fire Detection & Mitigation Monitoring System
-# Backend Flask + SocketIO + MQTT Ready
+# ESP32 + HiveMQ Cloud + Flask + Socket.IO
 # Universitas Brawijaya - INNOTECH 2026
 # ==========================================================
 
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
 from flask_socketio import SocketIO
+from dotenv import load_dotenv
+
+import paho.mqtt.client as mqtt
 import threading
-import random
-import time
+import ssl
 import json
 import csv
 import os
+import time
 from datetime import datetime
 
-import paho.mqtt.client as mqtt
-
 # ==========================================================
-# FLASK CONFIGURATION
+# LOAD ENVIRONMENT
 # ==========================================================
 
-import os
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-
-    socketio.run(
-        app,
-        host="0.0.0.0",
-        port=port
-    )
+load_dotenv()
 
 # ==========================================================
-# HIVE MQTT CONFIGURATION
+# FLASK CONFIG
 # ==========================================================
 
-BROKER = "xxxxxxxx.s1.eu.hivemq.cloud"   # Ganti dengan Cluster HiveMQ
-PORT = 8883
+app = Flask(__name__)
+app.config["SECRET_KEY"] = os.getenv("SECRET_KEY", "fireguard2026")
 
-USERNAME = "USERNAME_HIVEMQ"             # Ganti Username HiveMQ
-PASSWORD = "PASSWORD_HIVEMQ"             # Ganti Password HiveMQ
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    async_mode="threading"
+)
+# ==========================================================
+# MQTT CONFIG (Railway Environment Variables)
+# ==========================================================
 
-TOPIC_SENSOR = "fireguard/sensor"
+BROKER = os.getenv(
+    "BROKER",
+    "663b70db43fe458b9098b4d55f4d9169.s1.eu.hivemq.cloud"
+)
+
+MQTT_PORT = int(os.getenv("MQTT_PORT", 8883))
+MQTT_USERNAME = os.getenv("MQTT_USERNAME", "FIREGUARD")
+MQTT_PASSWORD = os.getenv("MQTT_PASSWORD", "FIREGUARD77")
+MQTT_TOPIC = os.getenv("MQTT_TOPIC", "fireguard/sensor")
 
 # ==========================================================
-# DATA LOG
+# DATA FOLDER
 # ==========================================================
 
 DATA_FOLDER = "data"
@@ -54,8 +60,11 @@ CSV_FILE = os.path.join(DATA_FOLDER, "event_log.csv")
 os.makedirs(DATA_FOLDER, exist_ok=True)
 
 if not os.path.exists(CSV_FILE):
-    with open(CSV_FILE, "w", newline="") as f:
-        writer = csv.writer(f)
+
+    with open(CSV_FILE, "w", newline="") as file:
+
+        writer = csv.writer(file)
+
         writer.writerow([
             "time",
             "temperature",
@@ -67,21 +76,21 @@ if not os.path.exists(CSV_FILE):
         ])
 
 # ==========================================================
-# DATA GLOBAL
+# GLOBAL SENSOR DATA
 # ==========================================================
 
 sensor_data = {
-    "temperature": 30,
-    "gas": 800,
+    "temperature": "--",
+    "gas": "--",
     "flame": False,
-    "status": "AMAN",
-    "prediction": "Cooking Activity",
-    "confidence": 95,
-    "time": datetime.now().strftime("%H:%M:%S")
+    "status": "MENUNGGU ESP32",
+    "prediction": "Waiting MQTT Data",
+    "confidence": 0,
+    "time": "--:--:--"
 }
 
 # ==========================================================
-# FIRE DECISION
+# FIRE DECISION ENGINE
 # ==========================================================
 
 def fire_decision(temp, gas, flame):
@@ -90,28 +99,27 @@ def fire_decision(temp, gas, flame):
     prediction = "Cooking Activity"
     confidence = 95
 
-    if flame and gas > 1800 and temp > 50:
+    if flame and gas >= 1800 and temp >= 50:
         status = "KEBAKARAN"
         prediction = "Fire Accident"
         confidence = 99
 
-    elif gas > 1300 or temp > 42:
+    elif flame or gas >= 1300 or temp >= 42:
         status = "WASPADA"
         prediction = "Smoke / Heat"
         confidence = 88
 
     return status, prediction, confidence
 
-
 # ==========================================================
-# SAVE LOG CSV
+# SAVE CSV LOG
 # ==========================================================
 
 def save_log():
 
-    with open(CSV_FILE, "a", newline="") as f:
+    with open(CSV_FILE, "a", newline="") as file:
 
-        writer = csv.writer(f)
+        writer = csv.writer(file)
 
         writer.writerow([
             sensor_data["time"],
@@ -123,9 +131,8 @@ def save_log():
             sensor_data["confidence"]
         ])
 
-
 # ==========================================================
-# ROUTE DASHBOARD
+# ROUTES
 # ==========================================================
 
 @app.route("/")
@@ -133,39 +140,89 @@ def dashboard():
     return render_template("index.html")
 
 
+@app.route("/api/sensor")
+def api_sensor():
+    return jsonify(sensor_data)
+
+
+@app.route("/api/log")
+def api_log():
+
+    logs = []
+
+    try:
+        with open(CSV_FILE, newline="") as file:
+            reader = csv.DictReader(file)
+            logs = list(reader)[-30:]
+    except:
+        pass
+
+    return jsonify(logs)
+
 # ==========================================================
-# SOCKET.IO DARI COMPUTER VISION
-# ==========================================================
-
-@socketio.on("cv_update")
-def cv_update(data):
-
-    sensor_data["prediction"] = data["prediction"]
-    sensor_data["status"] = data["status"]
-    sensor_data["confidence"] = data["confidence"]
-
-    socketio.emit("sensor_update", sensor_data)
-
-
-# ==========================================================
-# KONFIRMASI PEMILIK
+# SOCKET EVENTS
 # ==========================================================
 
 @socketio.on("owner_confirmation")
 def owner_confirmation(data):
 
-    print("Owner Confirmation :", data)
+    print("\n==============================")
+    print("OWNER CONFIRMATION RECEIVED")
+    print(data)
+    print("==============================\n")
 
+
+@socketio.on("telegram_alert")
+def telegram_alert():
+
+    print("\nTelegram Alert Requested\n")
+
+
+@socketio.on("fire_department")
+def fire_department():
+
+    print("\nEmergency Fire Department Requested\n")
+
+
+@socketio.on("cv_update")
+def cv_update(data):
+
+    sensor_data["prediction"] = data.get(
+        "prediction",
+        sensor_data["prediction"]
+    )
+
+    sensor_data["status"] = data.get(
+        "status",
+        sensor_data["status"]
+    )
+
+    sensor_data["confidence"] = data.get(
+        "confidence",
+        sensor_data["confidence"]
+    )
+
+    socketio.emit("sensor_update", sensor_data)
 
 # ==========================================================
-# MQTT CALLBACK
+# MQTT CALLBACKS
 # ==========================================================
 
 def on_connect(client, userdata, flags, reason_code, properties=None):
 
-    print("MQTT Connected")
+    if reason_code == 0:
 
-    client.subscribe(TOPIC_SENSOR)
+        print("\n==========================================")
+        print("MQTT CONNECTED TO HIVEMQ CLOUD")
+        print("Broker :", BROKER)
+        print("Topic  :", MQTT_TOPIC)
+        print("==========================================\n")
+
+        client.subscribe(MQTT_TOPIC)
+
+    else:
+
+        print("MQTT FAILED :", reason_code)
 
 
 def on_message(client, userdata, msg):
@@ -176,9 +233,9 @@ def on_message(client, userdata, msg):
 
         payload = json.loads(msg.payload.decode())
 
-        temp = payload.get("temperature", 30)
-        gas = payload.get("gas", 800)
-        flame = payload.get("flame", False)
+        temp = float(payload.get("temperature", 0))
+        gas = int(payload.get("gas", 0))
+        flame = bool(payload.get("flame", False))
 
         status, prediction, confidence = fire_decision(
             temp,
@@ -200,15 +257,19 @@ def on_message(client, userdata, msg):
 
         socketio.emit("sensor_update", sensor_data)
 
+        print("\n========== MQTT DATA ==========")
         print(sensor_data)
+        print("===============================\n")
 
-    except Exception as e:
-        print("MQTT Error :", e)
+    except Exception as err:
 
+        print("MQTT ERROR :", err)
 
 # ==========================================================
-# MQTT THREAD
+# MQTT THREAD (AUTO RECONNECT)
 # ==========================================================
+
+mqtt_started = False
 
 def mqtt_thread():
 
@@ -216,85 +277,77 @@ def mqtt_thread():
         mqtt.CallbackAPIVersion.VERSION2
     )
 
-    client.username_pw_set(USERNAME, PASSWORD)
-    client.tls_set()
+    client.username_pw_set(
+        MQTT_USERNAME,
+        MQTT_PASSWORD
+    )
+
+    client.tls_set(
+        tls_version=ssl.PROTOCOL_TLS_CLIENT
+    )
 
     client.on_connect = on_connect
     client.on_message = on_message
 
-    try:
-
-        client.connect(BROKER, PORT, 60)
-        client.loop_forever()
-
-    except Exception as e:
-        print("MQTT Failed :", e)
-
-
-# ==========================================================
-# DEMO SENSOR (UNTUK WOKWI / TANPA MQTT)
-# ==========================================================
-
-def simulator():
-
-    global sensor_data
-
     while True:
 
-        temp = random.randint(25, 65)
-        gas = random.randint(400, 2400)
-        flame = random.choice([False, False, False, True])
+        try:
 
-        status, prediction, confidence = fire_decision(
-            temp,
-            gas,
-            flame
-        )
+            print("Connecting HiveMQ Cloud...")
 
-        sensor_data.update({
-            "temperature": temp,
-            "gas": gas,
-            "flame": flame,
-            "status": status,
-            "prediction": prediction,
-            "confidence": confidence,
-            "time": datetime.now().strftime("%H:%M:%S")
-        })
+            client.connect(
+                BROKER,
+                MQTT_PORT,
+                keepalive=60
+            )
 
-        save_log()
+            client.loop_forever()
 
-        socketio.emit("sensor_update", sensor_data)
+        except Exception as err:
 
-        time.sleep(3)
+            print("MQTT CONNECTION LOST")
+            print(err)
 
+            time.sleep(5)
+
+
+def start_mqtt():
+
+    global mqtt_started
+
+    if mqtt_started:
+        return
+
+    mqtt_started = True
+
+    threading.Thread(
+        target=mqtt_thread,
+        daemon=True
+    ).start()
 
 # ==========================================================
-# START SYSTEM
+# START MQTT
+# ==========================================================
+
+start_mqtt()
+
+# ==========================================================
+# MAIN SERVER
 # ==========================================================
 
 if __name__ == "__main__":
 
-    print("=" * 45)
-    print("🔥 FIREGUARD AI DASHBOARD")
-    print("Dashboard : http://127.0.0.1:5000")
-    print("=" * 45)
-
-    DEMO_MODE = True      # True = Simulasi | False = MQTT ESP32
-
-    if DEMO_MODE:
-        threading.Thread(
-            target=simulator,
-            daemon=True
-        ).start()
-    else:
-        threading.Thread(
-            target=mqtt_thread,
-            daemon=True
-        ).start()
+    print("=" * 55)
+    print("🔥 FIREGUARD AI DASHBOARD v4.0 (RAILWAY READY)")
+    print("Dashboard Port :", os.getenv("PORT", "5000"))
+    print("Broker         :", BROKER)
+    print("Topic          :", MQTT_TOPIC)
+    print("=" * 55)
 
     socketio.run(
         app,
         host="0.0.0.0",
-        port=5000,
-        debug=True
+        port=int(os.getenv("PORT", 5000)),
+        debug=False,
+        allow_unsafe_werkzeug=True
     )
