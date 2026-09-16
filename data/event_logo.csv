@@ -1,0 +1,11 @@
+time,temperature,gas,flame,status,prediction,confidence
+18:00:00,30,800,False,AMAN,Cooking Activity,95
+18:00:05,31,920,False,AMAN,Cooking Activity,94
+18:00:10,33,1180,False,WASPADA,Smoke / Heat,87
+18:00:15,35,1450,False,WASPADA,Smoke / Heat,89
+18:00:20,38,1650,False,WASPADA,Smoke / Heat,90
+18:00:25,45,1850,True,KEBAKARAN,Fire Accident,97
+18:00:30,52,2150,True,KEBAKARAN,Fire Accident,99
+18:00:35,60,2380,True,KEBAKARAN,Fire Accident,99
+18:00:40,41,1250,False,WASPADA,Smoke / Heat,88
+18:00:45,32,890,False,AMAN,Cooking Activity,96

@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+
+# VS Code
+.vscode/
+
+# Environment
+.env
+
+# Log sensor
+data/event_log.csv
+
+# Windows
+Thumbs.db

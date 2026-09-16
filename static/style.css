@@ -1,0 +1,493 @@
+/* ==========================================================
+   FIREGUARD AI - STYLE.CSS (FINAL VERSION)
+   Smart Fire Detection Dashboard
+   Theme : Black + Red + Glassmorphism
+   ========================================================== */
+
+/* ================= RESET ================= */
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:"Poppins",sans-serif;
+}
+
+body{
+    background:#090909;
+    color:#ffffff;
+    min-height:100vh;
+    overflow-x:hidden;
+}
+
+/* Background Effect */
+
+body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    background:
+    radial-gradient(circle at top right,
+    rgba(255,0,0,0.18),
+    transparent 40%),
+    radial-gradient(circle at bottom left,
+    rgba(255,80,0,0.12),
+    transparent 40%);
+    z-index:-1;
+}
+
+/* ================= HEADER ================= */
+
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:22px 35px;
+    background:linear-gradient(90deg,#540000,#8b0000,#d40000);
+    border-bottom:2px solid #ff4040;
+    box-shadow:0 5px 25px rgba(255,0,0,.4);
+    position:sticky;
+    top:0;
+    z-index:999;
+}
+
+.logo-area{
+    display:flex;
+    align-items:center;
+    gap:18px;
+}
+
+.logo{
+    width:65px;
+    height:65px;
+    border-radius:50%;
+    border:2px solid white;
+    object-fit:cover;
+}
+
+.logo-area h1{
+    font-size:30px;
+    font-weight:700;
+    letter-spacing:1px;
+}
+
+.logo-area p{
+    font-size:14px;
+    color:#ffdada;
+}
+
+.system-status{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+}
+
+.status-box{
+    background:rgba(255,255,255,.08);
+    padding:10px 18px;
+    border-radius:30px;
+    border:1px solid rgba(255,255,255,.15);
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.dot{
+    width:10px;
+    height:10px;
+    border-radius:50%;
+}
+
+.green{
+    background:#00ff88;
+    box-shadow:0 0 10px #00ff88;
+    animation:blink 1.3s infinite;
+}
+
+@keyframes blink{
+    50%{opacity:.3;}
+}
+
+/* ================= CARD SENSOR ================= */
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:22px;
+    padding:30px;
+}
+
+.card{
+    background:rgba(22,22,28,.9);
+    border-radius:22px;
+    padding:25px;
+    text-align:center;
+    border:1px solid rgba(255,255,255,.08);
+    transition:.35s;
+    backdrop-filter:blur(12px);
+}
+
+.card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 0 25px rgba(255,0,0,.3);
+}
+
+.card .icon{
+    font-size:40px;
+    margin-bottom:10px;
+}
+
+.card h4{
+    color:#bbbbbb;
+    font-size:15px;
+    margin-bottom:12px;
+}
+
+.card h2{
+    font-size:42px;
+    font-weight:700;
+}
+
+.card p{
+    color:#888;
+    margin-top:10px;
+}
+
+.temp-card{
+    border-left:5px solid #ff5050;
+}
+
+.gas-card{
+    border-left:5px solid #00ff88;
+}
+
+.flame-card{
+    border-left:5px solid #ffaa00;
+}
+
+.status-card{
+    border-left:5px solid #00bfff;
+}
+
+/* Alarm Animation */
+
+.status-card.alarm{
+    animation:alarmFlash .7s infinite;
+}
+
+@keyframes alarmFlash{
+    0%{
+        background:#460000;
+        box-shadow:0 0 15px #ff0000;
+    }
+
+    50%{
+        background:#ff0000;
+        box-shadow:0 0 40px #ff3333;
+    }
+
+    100%{
+        background:#460000;
+        box-shadow:0 0 15px #ff0000;
+    }
+}
+
+/* ================= GRID ================= */
+
+.grid-two{
+    display:grid;
+    grid-template-columns:2fr 1fr;
+    gap:25px;
+    padding:0 30px 30px;
+}
+
+/* ================= PANEL ================= */
+
+.panel{
+    background:#16161d;
+    border-radius:22px;
+    padding:22px;
+    border:1px solid rgba(255,255,255,.08);
+    box-shadow:0 0 20px rgba(0,0,0,.4);
+}
+
+.panel h3{
+    margin-bottom:20px;
+    color:#ff5a5a;
+    font-size:20px;
+}
+
+/* ================= CHART ================= */
+
+canvas{
+    width:100% !important;
+    height:320px !important;
+}
+
+/* ================= CAMERA ================= */
+
+.camera-panel img{
+    width:100%;
+    border-radius:15px;
+    border:2px solid #ff4040;
+    object-fit:cover;
+    margin-bottom:15px;
+}
+
+.camera-status{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    color:#00ff88;
+    margin-bottom:15px;
+}
+
+/* ================= BUTTON ================= */
+
+.btn-red,
+.btn-orange,
+.btn-yellow{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    cursor:pointer;
+    font-size:15px;
+    font-weight:600;
+    margin-top:12px;
+    transition:.3s;
+}
+
+.btn-red{
+    background:#d10000;
+    color:white;
+}
+
+.btn-red:hover{
+    background:#ff0000;
+    box-shadow:0 0 18px #ff4040;
+}
+
+.btn-orange{
+    background:#ff6a00;
+    color:white;
+}
+
+.btn-orange:hover{
+    background:#ff8d2b;
+}
+
+.btn-yellow{
+    background:#ffd400;
+    color:black;
+}
+
+.btn-yellow:hover{
+    background:#ffe866;
+}
+
+/* ================= COMPUTER VISION ================= */
+
+.prediction-box{
+    background:#23232b;
+    padding:18px;
+    border-radius:15px;
+    margin-bottom:20px;
+}
+
+.prediction-box h4{
+    color:#999;
+}
+
+.prediction-box h2{
+    margin-top:10px;
+    color:#00ff88;
+}
+
+.confidence-box{
+    margin-bottom:25px;
+}
+
+.progress{
+    width:100%;
+    height:12px;
+    background:#333;
+    border-radius:30px;
+    overflow:hidden;
+    margin:12px 0;
+}
+
+.progress-bar{
+    width:95%;
+    height:100%;
+    background:linear-gradient(90deg,#00ff88,#00d2ff);
+}
+
+.decision-box{
+    background:#083d27;
+    border-left:5px solid #00ff88;
+    padding:18px;
+    border-radius:15px;
+}
+
+.decision-box h2{
+    margin-top:10px;
+    color:#00ff88;
+}
+
+/* ================= TABLE INFO ================= */
+
+.info-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.info-table td{
+    padding:12px;
+    border-bottom:1px solid #2a2a34;
+    font-size:14px;
+}
+
+.info-table td:first-child{
+    color:#bbbbbb;
+    width:45%;
+}
+
+/* ================= LOG TABLE ================= */
+
+.log-table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.log-table th{
+    background:#111;
+    color:#ff5a5a;
+    padding:14px;
+    text-align:left;
+}
+
+.log-table td{
+    padding:12px;
+    border-bottom:1px solid #2b2b35;
+}
+
+.log-table tr:hover{
+    background:#1d1d26;
+}
+
+.safe{
+    color:#00ff88;
+    font-weight:600;
+}
+
+.warning{
+    color:#ffd84a;
+    font-weight:600;
+}
+
+.danger{
+    color:#ff4040;
+    font-weight:600;
+}
+
+/* ================= EMERGENCY PANEL ================= */
+
+.emergency-panel{
+    border:2px solid #ff4040;
+}
+
+.emergency-info{
+    background:#2a0000;
+    padding:15px;
+    border-radius:12px;
+    color:#ffb8b8;
+    margin-bottom:15px;
+}
+
+/* ================= STATUS ITEM ================= */
+
+.status-item{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:14px 0;
+    border-bottom:1px solid #2b2b35;
+}
+
+.online{
+    color:#00ff88;
+}
+
+.offline{
+    color:#ff4040;
+}
+
+/* ================= FOOTER ================= */
+
+footer{
+    margin-top:30px;
+    padding:30px;
+    text-align:center;
+    background:#111;
+    border-top:1px solid #333;
+}
+
+footer h3{
+    color:#ff4d4d;
+    margin-bottom:10px;
+}
+
+footer p{
+    color:#999;
+}
+
+footer small{
+    color:#666;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:1100px){
+
+    .grid-two{
+        grid-template-columns:1fr;
+    }
+
+    .system-status{
+        margin-top:15px;
+        justify-content:center;
+    }
+
+    .header{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:15px;
+    }
+
+}
+
+@media(max-width:768px){
+
+    .cards{
+        grid-template-columns:1fr;
+    }
+
+    .header{
+        padding:18px;
+    }
+
+    .panel{
+        padding:18px;
+    }
+
+    .logo-area h1{
+        font-size:24px;
+    }
+
+    canvas{
+        height:260px !important;
+    }
+
+}
