@@ -1,7 +1,8 @@
 /* ==========================================================
-   FIREGUARD AI - script.js (FINAL VERSION)
-   Dashboard Realtime ESP32 + MQTT + Computer Vision
-   ========================================================== */
+   FIREGUARD AI - script.js FINAL MQTT ONLY
+   Dashboard Realtime ESP32 + HiveMQ + Socket.IO
+   Universitas Brawijaya - INNOTECH 2026
+========================================================== */
 
 // ===================== SOCKET.IO =====================
 const socket = io();
@@ -25,6 +26,20 @@ const logBody = document.getElementById("logBody");
 
 const cameraPreview = document.getElementById("cameraPreview");
 
+// ===================== STATUS AWAL =====================
+temp.textContent = "--°C";
+gas.textContent = "--";
+flame.textContent = "OFF";
+
+status.textContent = "MENUNGGU ESP32";
+statusDesc.textContent = "Menunggu data dari HiveMQ";
+
+prediction.textContent = "Waiting MQTT Data";
+confidence.textContent = "0%";
+confidenceBar.style.width = "0%";
+
+lastTime.textContent = "--:--:--";
+
 // ===================== CHART =====================
 const ctx = document.getElementById("sensorChart").getContext("2d");
 
@@ -32,64 +47,64 @@ const labels = [];
 const tempData = [];
 const gasData = [];
 
-const sensorChart = new Chart(ctx, {
-    type: "line",
-    data: {
-        labels: labels,
-        datasets: [
+const sensorChart = new Chart(ctx,{
+    type:"line",
+    data:{
+        labels,
+        datasets:[
             {
-                label: "Temperature (°C)",
-                data: tempData,
-                borderColor: "#ff4444",
-                backgroundColor: "rgba(255,68,68,0.15)",
-                fill: true,
-                tension: 0.4,
+                label:"Temperature (°C)",
+                data:tempData,
+                borderColor:"#ff4444",
+                backgroundColor:"rgba(255,68,68,0.15)",
+                fill:true,
+                tension:0.35,
+                borderWidth:2,
+                pointRadius:3
             },
             {
-                label: "MQ-2 Gas (PPM)",
-                data: gasData,
-                borderColor: "#00ff99",
-                backgroundColor: "rgba(0,255,153,0.15)",
-                fill: true,
-                tension: 0.4,
-            },
-        ],
+                label:"MQ-2 Gas (PPM)",
+                data:gasData,
+                borderColor:"#00ff99",
+                backgroundColor:"rgba(0,255,153,0.15)",
+                fill:true,
+                tension:0.35,
+                borderWidth:2,
+                pointRadius:3
+            }
+        ]
     },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                labels: {
-                    color: "#ffffff",
-                },
-            },
+    options:{
+        responsive:true,
+        maintainAspectRatio:false,
+        animation:false,
+        plugins:{
+            legend:{
+                labels:{color:"#ffffff"}
+            }
         },
-        scales: {
-            x: {
-                ticks: { color: "#cccccc" },
-                grid: { color: "#333333" },
+        scales:{
+            x:{
+                ticks:{color:"#cccccc"},
+                grid:{color:"#333333"}
             },
-            y: {
-                ticks: { color: "#cccccc" },
-                grid: { color: "#333333" },
-            },
-        },
-    },
+            y:{
+                beginAtZero:true,
+                ticks:{color:"#cccccc"},
+                grid:{color:"#333333"}
+            }
+        }
+    }
 });
 
-// ===================== UPDATE DASHBOARD =====================
-function updateDashboard(data) {
-    temp.innerHTML = data.temperature + "°C";
-    gas.innerHTML = data.gas;
-    flame.innerHTML = data.flame ? "ON" : "OFF";
-    lastTime.innerHTML = data.time;
+// ===================== UPDATE CHART =====================
+function updateChart(data){
 
     labels.push(data.time);
-    tempData.push(data.temperature);
-    gasData.push(data.gas);
+    tempData.push(Number(data.temperature));
+    gasData.push(Number(data.gas));
 
-    if (labels.length > 15) {
+    if(labels.length>20){
         labels.shift();
         tempData.shift();
         gasData.shift();
@@ -97,226 +112,265 @@ function updateDashboard(data) {
 
     sensorChart.update();
 
-    updateStatus(data);
-    addLog(data);
 }
 
-// ===================== STATUS =====================
-function updateStatus(data) {
-    status.innerHTML = data.status;
-    prediction.innerHTML = data.prediction;
-    confidence.innerHTML = data.confidence + "%";
+// ===================== UPDATE STATUS =====================
+function updateStatus(data){
+
+    status.textContent = data.status;
+    prediction.textContent = data.prediction;
+    confidence.textContent = data.confidence + "%";
     confidenceBar.style.width = data.confidence + "%";
 
     statusCard.classList.remove("alarm");
 
-    if (data.status === "AMAN") {
-        statusCard.style.background = "#0f5132";
-        statusDesc.innerHTML = "Lingkungan Aman";
+    if(data.status==="AMAN"){
 
-        decisionText.innerHTML = "Tidak Terjadi Kebakaran";
-        decisionText.style.color = "#00ff88";
+        statusCard.style.background="#0f5132";
+        statusDesc.textContent="Lingkungan Aman";
 
-        prediction.style.color = "#00ff88";
-        confidenceBar.style.background = "#00ff88";
+        prediction.style.color="#00ff88";
+        decisionText.style.color="#00ff88";
+        decisionText.textContent="Tidak Terjadi Kebakaran";
+
+        confidenceBar.style.background="#00ff88";
+
     }
 
-    else if (data.status === "WASPADA") {
-        statusCard.style.background = "#8a6500";
-        statusDesc.innerHTML = "Gas atau Suhu Meningkat";
+    else if(data.status==="WASPADA"){
 
-        decisionText.innerHTML = "Potensi Kebakaran";
-        decisionText.style.color = "#ffd54f";
+        statusCard.style.background="#8a6500";
+        statusDesc.textContent="Gas atau Suhu Meningkat";
 
-        prediction.style.color = "#ffd54f";
-        confidenceBar.style.background = "#ffd54f";
+        prediction.style.color="#ffd54f";
+        decisionText.style.color="#ffd54f";
+        decisionText.textContent="Potensi Kebakaran";
+
+        confidenceBar.style.background="#ffd54f";
+
     }
 
-    else {
-        statusCard.style.background = "#7b0000";
+    else if(data.status==="KEBAKARAN"){
+
+        statusCard.style.background="#7b0000";
         statusCard.classList.add("alarm");
 
-        statusDesc.innerHTML = "KEBAKARAN TERDETEKSI";
+        statusDesc.textContent="KEBAKARAN TERDETEKSI";
 
-        decisionText.innerHTML = "🔥 FIRE ACCIDENT";
-        decisionText.style.color = "#ff4040";
+        prediction.style.color="#ff4040";
+        decisionText.style.color="#ff4040";
+        decisionText.textContent="🔥 FIRE ACCIDENT";
 
-        prediction.style.color = "#ff4040";
-        confidenceBar.style.background = "#ff4040";
+        confidenceBar.style.background="#ff4040";
 
         startAlarm();
+
     }
+
 }
 
-// ===================== ALARM =====================
-let flashing = false;
+// ===================== UPDATE CAMERA =====================
+function updateCamera(cameraUrl=""){
 
-function startAlarm() {
+    if(!cameraPreview) return;
 
-    if (flashing) return;
+    if(cameraUrl){
 
-    flashing = true;
+        cameraPreview.innerHTML = `
+            <img src="${cameraUrl}?t=${Date.now()}"
+                 alt="ESP32-CAM"
+                 style="
+                    width:100%;
+                    height:100%;
+                    object-fit:cover;
+                    border-radius:14px;
+                 ">
+        `;
 
-    let count = 0;
+    }else{
 
-    const alarm = setInterval(() => {
+        cameraPreview.innerHTML = `
+            <div class="camera-placeholder">
+                <h2>📷 ESP32-CAM</h2>
+                <p>WAITING FOR LIVE STREAM...</p>
+            </div>
+        `;
 
-        document.body.style.background =
-            count % 2 === 0 ? "#2b0000" : "#090909";
+    }
+
+}
+
+// Tampilkan placeholder pertama kali
+updateCamera();
+
+// ===================== UPDATE DASHBOARD =====================
+function updateDashboard(data){
+
+    temp.textContent = data.temperature + "°C";
+    gas.textContent = data.gas;
+    flame.textContent = data.flame ? "ON" : "OFF";
+    lastTime.textContent = data.time;
+
+    updateStatus(data);
+    updateChart(data);
+    addLog(data);
+
+    if(data.camera_url){
+        updateCamera(data.camera_url);
+    }
+
+}
+
+// ===================== FLASH ALARM =====================
+let alarmRunning=false;
+
+function startAlarm(){
+
+    if(alarmRunning) return;
+
+    alarmRunning=true;
+
+    let count=0;
+
+    const flash=setInterval(()=>{
+
+        document.body.classList.toggle("danger-bg");
 
         count++;
 
-        if (count > 8) {
-            clearInterval(alarm);
-            document.body.style.background = "#090909";
-            flashing = false;
+        if(count>=10){
+
+            clearInterval(flash);
+
+            document.body.classList.remove("danger-bg");
+
+            alarmRunning=false;
+
         }
 
-    }, 250);
+    },300);
+
 }
 
-// ===================== FIRE EVENT LOG =====================
-function addLog(data) {
+// ===================== EVENT LOG =====================
+function addLog(data){
 
-    const row = document.createElement("tr");
+    const row=document.createElement("tr");
 
-    let cls = "safe";
+    let cls="safe";
 
-    if (data.status === "WASPADA") cls = "warning";
-    if (data.status === "KEBAKARAN") cls = "danger";
+    if(data.status==="WASPADA") cls="warning";
+    if(data.status==="KEBAKARAN") cls="danger";
 
-    row.innerHTML = `
+    row.innerHTML=`
         <td>${data.time}</td>
         <td>${data.gas}</td>
         <td>${data.temperature}°C</td>
-        <td>${data.flame ? "ON" : "OFF"}</td>
+        <td>${data.flame ? "ON":"OFF"}</td>
         <td class="${cls}">${data.status}</td>
     `;
 
     logBody.prepend(row);
 
-    while (logBody.rows.length > 10) {
-        logBody.deleteRow(logBody.rows.length - 1);
+    while(logBody.rows.length>15){
+        logBody.deleteRow(logBody.rows.length-1);
     }
+
 }
 
-// ===================== SOCKET RECEIVE =====================
-socket.on("sensor_update", (data) => {
-    updateDashboard(data);
+// ===================== SOCKET MQTT =====================
+socket.on("connect",()=>{
+
+    console.log("🟢 Dashboard Connected");
+
 });
 
-// ===================== CAMERA REFRESH =====================
-const refreshBtn = document.getElementById("refreshCamera");
+socket.on("disconnect",()=>{
 
-if (refreshBtn) {
-    refreshBtn.addEventListener("click", () => {
+    console.log("🔴 Dashboard Disconnected");
 
-        cameraPreview.src =
-            "https://placehold.co/640x360/111111/ff4444?text=Refreshing+Camera";
+    status.textContent="OFFLINE";
+    statusDesc.textContent="Koneksi ke Flask terputus.";
 
-        setTimeout(() => {
+});
 
-            // Ganti dengan IP ESP32-CAM nanti
-            cameraPreview.src =
-                "https://placehold.co/640x360/111111/ff3333?text=ESP32-CAM+LIVE";
+socket.on("sensor_update",(data)=>{
 
-        }, 1200);
+    console.log("📡 DATA MQTT :",data);
+
+    updateDashboard(data);
+
+});
+
+// ===================== REFRESH CAMERA =====================
+const refreshBtn=document.getElementById("refreshCamera");
+
+if(refreshBtn){
+
+    refreshBtn.addEventListener("click",()=>{
+
+        cameraPreview.innerHTML=`
+            <div class="camera-placeholder">
+                <h2>📡 CONNECTING...</h2>
+                <p>Menghubungkan ke ESP32-CAM...</p>
+            </div>
+        `;
+
+        setTimeout(()=>{
+            updateCamera();
+        },1500);
+
     });
+
 }
 
-// ===================== TELEGRAM BUTTON =====================
-const telegramButton = document.getElementById("telegramButton");
+// ===================== TELEGRAM =====================
+const telegramButton=document.getElementById("telegramButton");
 
-if (telegramButton) {
+if(telegramButton){
 
-    telegramButton.addEventListener("click", () => {
+    telegramButton.addEventListener("click",()=>{
 
-        alert(
-            "📱 FIREGUARD AI\n\n" +
-            "Notifikasi Telegram berhasil dikirim (Simulasi).\n\n" +
-            "Versi final akan mengirim pesan ke HP pemilik."
-        );
+        socket.emit("telegram_alert");
+
+        alert("📱 Telegram Alert dikirim.");
 
     });
 
 }
 
 // ===================== OWNER CONFIRM =====================
-const ownerConfirm = document.getElementById("ownerConfirm");
+const ownerConfirm=document.getElementById("ownerConfirm");
 
-if (ownerConfirm) {
+if(ownerConfirm){
 
-    ownerConfirm.addEventListener("click", () => {
+    ownerConfirm.addEventListener("click",()=>{
 
-        socket.emit("owner_confirmation", {
-            status: "KEBAKARAN"
+        socket.emit("owner_confirmation",{
+            confirmation:true,
+            time:new Date().toLocaleTimeString("id-ID")
         });
 
-        alert(
-            "✅ Pemilik mengkonfirmasi kebakaran.\n\n" +
-            "Sistem akan menghubungi pemadam kebakaran."
-        );
+        alert("✅ Konfirmasi kebakaran dikirim.");
 
     });
 
 }
 
-// ===================== FIRE DEPARTMENT BUTTON =====================
-const fireButton = document.getElementById("fireDepartment");
+// ===================== FIRE DEPARTMENT =====================
+const fireButton=document.getElementById("fireDepartment");
 
-if (fireButton) {
+if(fireButton){
 
-    fireButton.addEventListener("click", () => {
+    fireButton.addEventListener("click",()=>{
 
-        alert(
-            "🚒 FIREGUARD AI\n\n" +
-            "Mengirim laporan darurat ke Pemadam Kebakaran (Simulasi)."
-        );
+        socket.emit("fire_department");
+
+        alert("🚒 Permintaan bantuan dikirim.");
 
     });
 
 }
 
-// ===================== DEMO MODE =====================
-// Dashboard tetap hidup walaupun MQTT belum aktif.
-
-function demoMode() {
-
-    const demo = {
-        temperature: Math.floor(Math.random() * 45) + 25,
-        gas: Math.floor(Math.random() * 2200) + 400,
-        flame: Math.random() > 0.85,
-        status: "AMAN",
-        prediction: "Cooking Activity",
-        confidence: 95,
-        time: new Date().toLocaleTimeString("id-ID"),
-    };
-
-    if (demo.flame || (demo.gas > 1800 && demo.temperature > 50)) {
-        demo.status = "KEBAKARAN";
-        demo.prediction = "Fire Accident";
-        demo.confidence = 99;
-    }
-
-    else if (demo.gas > 1200 || demo.temperature > 42) {
-        demo.status = "WASPADA";
-        demo.prediction = "Smoke / Heat";
-        demo.confidence = 88;
-    }
-
-    updateDashboard(demo);
-}
-
-// Jalankan demo hanya jika Socket belum mengirim data.
-let firstData = false;
-
-socket.on("sensor_update", () => {
-    firstData = true;
-});
-
-setInterval(() => {
-    if (!firstData) demoMode();
-}, 3000);
-
-// Tampilan awal
-demoMode();
+console.log("🔥 FIREGUARD AI MQTT Dashboard Ready");
+console.log("Waiting MQTT Topic : fireguard/sensor");

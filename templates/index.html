@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>🔥 FIREGUARD AI Dashboard</title>
 
-    <!-- Font -->
+    <!-- Google Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,18 +17,24 @@
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    <!-- SocketIO -->
+    <!-- Socket.IO -->
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 </head>
+
 <body>
 
-<!-- ================= HEADER ================= -->
+<!-- ====================================================== -->
+<!-- HEADER -->
+<!-- ====================================================== -->
 
 <header class="header">
 
+    <!-- KIRI -->
     <div class="logo-area">
 
-        <img src="{{ url_for('static', filename='fireguard.svg') }}" class="logo">
+        <img src="{{ url_for('static', filename='fireguard.svg') }}"
+             alt="FIREGUARD AI Logo"
+             class="logo">
 
         <div>
             <h1>🔥 FIREGUARD AI</h1>
@@ -36,52 +43,75 @@
 
     </div>
 
+    <!-- KANAN -->
     <div class="system-status">
-        <div class="status-box"><span class="dot green"></span> ESP32 ONLINE</div>
-        <div class="status-box"><span class="dot green"></span> MQTT CONNECTED</div>
-        <div class="status-box">🤖 AI ACTIVE</div>
+
+        <div class="status-box">
+            <span class="dot green"></span>
+            ESP32 ONLINE
+        </div>
+
+        <div class="status-box">
+            <span class="dot green"></span>
+            MQTT CONNECTED
+        </div>
+
+        <div class="status-box">
+            🤖 AI ACTIVE
+        </div>
+
+        <!-- Logo kanan atas -->
+        <img src="{{ url_for('static', filename='fireguard.svg') }}"
+             alt="Fireguard Logo"
+             class="header-logo">
+
     </div>
 
 </header>
 
-<!-- ================= SENSOR ================= -->
+<!-- ====================================================== -->
+<!-- SENSOR CARD -->
+<!-- ====================================================== -->
 
 <section class="cards">
 
     <div class="card temp-card">
-        <div class="icon">🌡</div>
+        <div class="icon">🌡️</div>
         <h4>Temperature</h4>
-        <h2 id="temp">30°C</h2>
-        <p>DHT22 Sensor</p>
+        <h2 id="temp">--°C</h2>
+        <p>DHT22 Temperature Sensor</p>
     </div>
 
     <div class="card gas-card">
         <div class="icon">💨</div>
-        <h4>MQ-2 Gas</h4>
-        <h2 id="gas">800</h2>
-        <p>PPM</p>
+        <h4>MQ-2 Gas Sensor</h4>
+        <h2 id="gas">--</h2>
+        <p>Smoke Concentration (PPM)</p>
     </div>
 
     <div class="card flame-card">
         <div class="icon">🔥</div>
         <h4>Flame Sensor</h4>
         <h2 id="flame">OFF</h2>
-        <p>Status Api</p>
+        <p>5 Channel Flame Detector</p>
     </div>
 
     <div class="card status-card" id="statusCard">
         <div class="icon">🚨</div>
         <h4>Fire Status</h4>
-        <h2 id="status">AMAN</h2>
-        <p id="statusDesc">Lingkungan Aman</p>
+        <h2 id="status">MENUNGGU ESP32</h2>
+        <p id="statusDesc">Waiting MQTT Data...</p>
     </div>
 
 </section>
 
-<!-- ================= GRAFIK ================= -->
+<!-- ====================================================== -->
+<!-- GRAFIK + CAMERA -->
+<!-- ====================================================== -->
 
 <section class="grid-two">
 
+    <!-- Panel Grafik -->
     <div class="panel">
 
         <h3>📈 Monitoring Sensor Realtime</h3>
@@ -90,26 +120,39 @@
 
     </div>
 
+    <!-- Panel Kamera ESP32-CAM -->
     <div class="panel camera-panel">
 
-        <h3>📷 ESP32-CAM Live Preview</h3>
+        <h3>📷 ESP32-CAM Live Monitoring</h3>
 
-        <img id="cameraPreview"
-        src="https://placehold.co/640x360/111111/ff3333?text=ESP32-CAM+STREAM">
+        <div class="camera-frame" id="cameraPreview">
+
+            <div class="camera-placeholder">
+
+                <h2>📷 ESP32-CAM</h2>
+
+                <p>WAITING FOR LIVE STREAM...</p>
+
+            </div>
+
+        </div>
 
         <div class="camera-status">
-            <span class="dot green"></span> Camera Online
+            <span class="dot green"></span>
+            Camera Ready
         </div>
 
         <button class="btn-red" id="refreshCamera">
-            Refresh Kamera
+            🔄 Refresh Kamera
         </button>
 
     </div>
 
 </section>
 
-<!-- ================= AI ================= -->
+<!-- ====================================================== -->
+<!-- AI COMPUTER VISION -->
+<!-- ====================================================== -->
 
 <section class="grid-two">
 
@@ -118,23 +161,33 @@
         <h3>🤖 Computer Vision Detection</h3>
 
         <div class="prediction-box">
+
             <h4>AI Prediction</h4>
-            <h2 id="prediction">Cooking Activity</h2>
+
+            <h2 id="prediction">Waiting MQTT Data</h2>
+
         </div>
 
         <div class="confidence-box">
+
             <p>Confidence AI</p>
 
             <div class="progress">
                 <div class="progress-bar" id="confidenceBar"></div>
             </div>
 
-            <span id="confidence">95%</span>
+            <span id="confidence">0%</span>
+
         </div>
 
-        <div class="decision-box" id="decisionBox">
-            <p>Decision AI</p>
-            <h2 id="decisionText">Tidak Terjadi Kebakaran</h2>
+        <div class="decision-box">
+
+            <p>Fire Decision</p>
+
+            <h2 id="decisionText">
+                Menunggu Data Sensor...
+            </h2>
+
         </div>
 
     </div>
@@ -145,14 +198,23 @@
 
         <table class="info-table">
 
-            <tr><td>ESP32</td><td>DevKit V1</td></tr>
-            <tr><td>MQ-2</td><td>Smoke Sensor</td></tr>
-            <tr><td>DHT22</td><td>Temperature Sensor</td></tr>
-            <tr><td>Flame Sensor</td><td>5 Channel</td></tr>
+            <tr><td>ESP32 Board</td><td>ESP32 DevKit V1</td></tr>
+
+            <tr><td>Gas Sensor</td><td>MQ-2 Smoke & Gas Sensor</td></tr>
+
+            <tr><td>Temperature Sensor</td><td>DHT22 Digital Sensor</td></tr>
+
+            <tr><td>Flame Sensor</td><td>5 Channel Infrared Flame Sensor</td></tr>
+
             <tr><td>Camera</td><td>ESP32-CAM OV2640</td></tr>
-            <tr><td>MQTT</td><td>HiveMQ Cloud</td></tr>
-            <tr><td>Computer Vision</td><td>OpenCV AI</td></tr>
+
+            <tr><td>MQTT Broker</td><td>HiveMQ Cloud TLS</td></tr>
+
+            <tr><td>Computer Vision</td><td>OpenCV AI Detection</td></tr>
+
             <tr><td>Notification</td><td>Telegram Bot</td></tr>
+
+            <tr><td>Last Update</td><td id="lastTime">--:--:--</td></tr>
 
         </table>
 
@@ -160,64 +222,66 @@
 
 </section>
 
-<!-- ================= LOG ================= -->
+<!-- ====================================================== -->
+<!-- FIRE EVENT LOG -->
+<!-- ====================================================== -->
 
-<section class="panel">
+<section style="padding:0 30px 30px;">
 
-    <h3>📋 FIRE EVENT LOG</h3>
+    <div class="panel">
 
-    <table class="log-table">
+        <h3>📋 FIRE EVENT LOG</h3>
 
-        <thead>
+        <table class="log-table">
 
-            <tr>
-                <th>Waktu</th>
-                <th>Gas</th>
-                <th>Suhu</th>
-                <th>Flame</th>
-                <th>Status</th>
-            </tr>
+            <thead>
+                <tr>
+                    <th>Waktu</th>
+                    <th>Gas</th>
+                    <th>Suhu</th>
+                    <th>Flame</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
 
-        </thead>
+            <tbody id="logBody">
+                <!-- Data realtime masuk dari script.js -->
+            </tbody>
 
-        <tbody id="logBody">
+        </table>
 
-            <tr>
-                <td>18:00:00</td>
-                <td>800</td>
-                <td>30°C</td>
-                <td>OFF</td>
-                <td class="safe">AMAN</td>
-            </tr>
-
-        </tbody>
-
-    </table>
+    </div>
 
 </section>
 
-<!-- ================= EMERGENCY ================= -->
+<!-- ====================================================== -->
+<!-- EMERGENCY RESPONSE -->
+<!-- ====================================================== -->
 
 <section class="grid-two">
 
     <div class="panel emergency-panel">
 
-        <h3>🚨 Emergency Response</h3>
+        <h3>🚨 Emergency Response Center</h3>
 
         <div class="emergency-info">
-            Sistem akan mengirim notifikasi Telegram jika AI mendeteksi kebakaran.
+
+            FIREGUARD AI akan mengirimkan notifikasi kepada pemilik rumah apabila
+            sistem mendeteksi kebakaran berdasarkan data MQ-2, Flame Sensor,
+            DHT22 dan Computer Vision ESP32-CAM.
+
         </div>
 
         <button class="btn-red" id="telegramButton">
-            📱 Kirim Telegram
+            📱 SEND TELEGRAM ALERT
         </button>
 
         <button class="btn-orange" id="ownerConfirm">
-            ✅ Konfirmasi Pemilik
+            ✅ OWNER CONFIRMATION
         </button>
 
         <button class="btn-yellow" id="fireDepartment">
-            🚒 Hubungi Pemadam
+            🚒 CALL FIRE DEPARTMENT
         </button>
 
     </div>
@@ -233,35 +297,47 @@
 
         <div class="status-item">
             <span>ESP32-CAM</span>
-            <strong class="online">ONLINE</strong>
+            <strong class="online">READY</strong>
         </div>
 
         <div class="status-item">
-            <span>MQTT Broker</span>
+            <span>HiveMQ Broker</span>
             <strong class="online">CONNECTED</strong>
         </div>
 
         <div class="status-item">
             <span>Computer Vision</span>
-            <strong class="online">RUNNING</strong>
+            <strong class="online">ACTIVE</strong>
         </div>
 
         <div class="status-item">
-            <span>Last Update</span>
-            <strong id="lastTime">18:00:00</strong>
+            <span>Dashboard Status</span>
+            <strong class="online">REALTIME</strong>
         </div>
 
     </div>
 
 </section>
 
+<!-- ====================================================== -->
+<!-- FOOTER -->
+<!-- ====================================================== -->
+
 <footer>
 
     <h3>🔥 FIREGUARD AI</h3>
 
+    <p>Smart Fire Detection & Mitigation Monitoring System</p>
+
     <p>Universitas Brawijaya • INNOTECH 2026</p>
 
+    <small>IoT • MQTT • ESP32 • Computer Vision • Telegram Alert</small>
+
 </footer>
+
+<!-- ====================================================== -->
+<!-- SCRIPT -->
+<!-- ====================================================== -->
 
 <script src="{{ url_for('static', filename='script.js') }}"></script>
 
