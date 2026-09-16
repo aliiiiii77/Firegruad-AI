@@ -1,40 +1,50 @@
-# ============================
-# FIREGUARD AI - Requirements
-# Dashboard Flask + MQTT + AI
-# ============================
+# ==========================================================
+# FIREGUARD AI v3.0 FINAL
+# ESP32 + HiveMQ + Flask + Socket.IO + Computer Vision
+# Universitas Brawijaya - INNOTECH 2026
+# ==========================================================
 
+# =========================
+# Flask Dashboard
+# =========================
 Flask==3.1.2
 Flask-SocketIO==5.5.1
+Flask-Cors==6.0.1
+gunicorn==23.0.0
 eventlet==0.40.3
 
-# MQTT HiveMQ
+# =========================
+# MQTT HiveMQ Cloud
+# =========================
 paho-mqtt==2.1.0
 
-# Computer Vision
-opencv-python==4.12.0.88
-ultralytics==8.3.196
-numpy==2.2.6
-Pillow==11.3.0
-
-# Data Processing
-pandas==2.3.2
-
-# Telegram Notification
-python-telegram-bot==22.3
-
-# Realtime WebSocket
+# =========================
+# Realtime Socket.IO
+# =========================
 python-socketio==5.13.0
 python-engineio==4.12.2
 simple-websocket==1.1.0
 
-# Utilities
+# =========================
+# Computer Vision (ESP32-CAM AI)
+# =========================
+opencv-python-headless==4.12.0.88
+ultralytics==8.3.196
+numpy==2.2.6
+Pillow==11.3.0
+
+# =========================
+# Data Processing
+# =========================
+pandas==2.3.2
+
+# =========================
+# Telegram Notification
+# =========================
+python-telegram-bot==22.3
 requests==2.32.5
-Flask
-Flask-SocketIO
-Flask-Cors
-paho-mqtt
-eventlet
-pandas
-python-dotenv
-opencv-python-headless
-numpy
+
+# =========================
+# Environment Variable
+# =========================
+python-dotenv==1.1.1
